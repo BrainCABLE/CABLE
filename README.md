@@ -4,11 +4,9 @@ Using whole-brain 3D fluorescence imaging, we developed the CABLE method for acc
 # Example raw data 
 * The example data 'CJ4ROI.ims' can be accessed via [http://cable.bigconnectome.org](http://cable.bigconnectome.org).
 # Installation
-## Hardware requirements
-* NVIDIA CUDA GPU with CUDA Toolkit v12x
 
 ## Software requirements
-This project depends on MRtrix3. Here are the installation methods for different operating systems:
+This project depends on MRtrix3. Here are the installation methods for Linux and Windows:
 #### Linux
 * You can install MRtrix3 using conda:
 ```sh
@@ -31,13 +29,22 @@ Code dependencies are in 'requirement.txt'.
 ```sh
 pip install -r requirements.txt
 ```
-The code uses GPU to accelerate the computation, if using CPU, please refer to the “main_cpu.py” file.
-### (Optional) Asymmetric ODF filtering
+#### (Optional) Asymmetric ODF filtering
 If you want to perform asymmetric ODF filtering, a well - implemented toolkit (repository) can be directly applied to the cODF (https://github.com/CHrlS98/aodf - toolkit). It's important to note that currently, MRtrix3 does not support asymmetric ODF. Therefore, other visualization methods may be required, such as FSLeyes (see https://open.win.ox.ac.uk/pages/fsl/fsleyes/fsleyes/userdoc/).
 ## Docker
 We also provide a Docker image that contains all the dependencies for the project to run with the following command:
 ```sh
-docker run -it unrealz/cable
+docker pull unrealz/cable
+```
+For WSL2-based Docker Desktop users, use the following command to execute and display:
+```sh
+docker run -it -v /run/desktop/mnt/host/wslg/.X11-unix:/tmp/.X11-unix `
+                -v /run/desktop/mnt/host/wslg:/mnt/wslg `
+                -e DISPLAY=:0 `
+                -e WAYLAND_DISPLAY=wayland-0 `
+                -e XDG_RUNTIME_DIR=/mnt/wslg/runtime-dir `
+                -e PULSE_SERVER=/mnt/wslg/PulseServer `
+                cable python main.py CJ4ROI.ims
 ```
 
 
@@ -51,5 +58,3 @@ python main.py CJ4ROI.ims
 # Example input and output
 ![image](https://github.com/Euyz/CABLE/assets/33593212/e1d11bad-6171-4077-97b4-680b15ebdd21)
 ![image](https://github.com/Euyz/CABLE/assets/33593212/76fca208-a825-4109-bf2c-1382c2fbb889)
-
-

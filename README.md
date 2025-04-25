@@ -7,7 +7,7 @@ This repository provides sample data and code to get started quickly:\
 2. Install MRtrix3 and python code dependencies / install docker image.\
 3. Execute code.**
 # Example raw data 
-* The example data 'CJ4ROI.ims' can be accessed via [http://cable.bigconnectome.org](http://cable.bigconnectome.org).
+The example data 'CJ4ROI.ims' can be accessed via [http://cable.bigconnectome.org](http://cable.bigconnectome.org).
 # Installation
 
 ## 1. Software requirements

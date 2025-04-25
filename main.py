@@ -41,7 +41,7 @@ def split(block_size, shape, unit):
 
 def grad(temp, sigma, ratio):
     """
-    Compute the gradient of the image using Gaussian smoothing.
+    Compute the gradient of the image using Gaussian first-order derivative.
     
     @param temp: input image data
     @param sigma: standard deviation for Gaussian filter
@@ -113,10 +113,10 @@ def GradientWeightedFunction(img3d_path, cable_params, dwi_path):
     for batch in tqdm(dataloader, colour='GREEN'):
         # Get the image block and convert to numpy array
         roi = np.asarray(batch[0][0])
-        # Compute the smoothed gradients
+        # Compute the gradients
         Vx, Vy, Vz = grad(roi, sigma, ratio)
         r = np.stack((Vx, Vy, Vz), axis=-1)
-        # Compute the simulated directional response using PSF
+        # Compute the DSDFs using PSF
         x = psf(r, field_dirs, 100)
         # Convert to torch tensor and adjust dimensions for 3D convolution
         x = torch.as_tensor(x[None, ...].transpose([4, 0, 1, 2, 3]))

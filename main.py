@@ -116,7 +116,7 @@ def GradientWeightedFunction(img3d_path, cable_params, dwi_path):
         # Compute the gradients
         Vx, Vy, Vz = grad(roi, sigma, ratio)
         r = np.stack((Vx, Vy, Vz), axis=-1)
-        # Compute the DSDFs using PSF
+        # Compute the simulated directional response using PSF
         x = psf(r, field_dirs, 100)
         # Convert to torch tensor and adjust dimensions for 3D convolution
         x = torch.as_tensor(x[None, ...].transpose([4, 0, 1, 2, 3]))

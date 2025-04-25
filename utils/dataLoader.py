@@ -8,16 +8,9 @@ class CustomIMSDataset(Dataset):
         self.ODF_partition=ODF_partition
         self.data=data
         self.open_hdf5()
-        # self.flag=np.zeros(self.data.shape,dtype=bool)
-        # self.flag[0::75]=True
-        # self.flag[1::75] = True
-        # self.flag[2::75] = True
-        # self.flag[74::75] = True
-        # self.flag[73::75] = True
 
     def getDataByNiiIndexFromTif(self, tif, nii_roi):
         temp=self.axisTransform(tif,nii_roi)
-
         return torch.tensor(temp.astype(np.float32))
 
     def axisTransform(self,tif,nii_roi):

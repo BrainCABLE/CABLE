@@ -1,7 +1,7 @@
-cupy-cuda12x
 h5py
 nibabel
 numpy
+--extra-index-url https://download.pytorch.org/whl/cpu
 torch
 tqdm
 scipy

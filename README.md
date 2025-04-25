@@ -56,5 +56,6 @@ python main.py CJ4ROI.ims
 ```
 * The program will generate Fiber Orientation Distribution (FOD) and tractography (.tck) files which can be viewed with 'mrview' in 'Mrtrix3', use 'ODF Display' and 'Tractography' in 'Tools' toolbar to view them.
 # Example input and output
-![image](https://github.com/Euyz/CABLE/assets/33593212/e1d11bad-6171-4077-97b4-680b15ebdd21)
-![image](https://github.com/Euyz/CABLE/assets/33593212/76fca208-a825-4109-bf2c-1382c2fbb889)
+![image](https://github.com/user-attachments/assets/c143885d-33c9-46aa-bab5-047178527211)
+![image](https://github.com/user-attachments/assets/1b16129b-d4c4-4b83-aa88-2cd6b979e8f7)
+

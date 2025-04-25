@@ -10,7 +10,7 @@ This repository provides sample data and code to get started quickly:\
 The example data 'CJ4ROI.ims' can be accessed via [http://cable.bigconnectome.org](http://cable.bigconnectome.org).
 # Installation
 
-## 1. Software requirements
+## Software requirements
 This project depends on MRtrix3. Here are the installation methods for Linux and Windows:
 #### Linux
 * You can install MRtrix3 using conda:
@@ -29,7 +29,7 @@ Then, use the command ```sudo apt-get install mrtrix3``` in the Ubuntu subsystem
 * Installation via msys2:\
 Alternatively, you can refer to the official MRtrix3 documentation at https://www.mrtrix.org/download/windows-msys2/ and install it using msys2. In this case, the call to MRtrix3 within **main.py** needs to be executed manually.
 
-## 2. Code dependencies  
+## Code dependencies  
 Code dependencies are in 'requirement.txt'.  
 ```sh
 pip install -r requirements.txt

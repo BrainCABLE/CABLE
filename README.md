@@ -49,7 +49,7 @@ docker run -it -v /run/desktop/mnt/host/wslg/.X11-unix:/tmp/.X11-unix `
                 -e WAYLAND_DISPLAY=wayland-0 `
                 -e XDG_RUNTIME_DIR=/mnt/wslg/runtime-dir `
                 -e PULSE_SERVER=/mnt/wslg/PulseServer `
-                cable python main.py CJ4ROI.ims
+                unrealz/cable python main.py CJ4ROI.ims
 ```
 
 

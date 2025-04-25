@@ -1,11 +1,16 @@
 # Overview
-This repository implements the cytoarchitecture-based link estimation (CABLE) algorithm.\
-Using whole-brain 3D fluorescence imaging, we developed the CABLE method for accurate fiber tract mapping at cellular resolution. This method infers the fiber direction from the inherent anisotropy of the nucleus/soma shape and spatial arrangement of adjacent cells. It employs the spherical deconvolution algorithm to analyze three-dimensional images of cell staining and generate the Orientation Distribution Function (ODF). 
+CABLE (Cytoarchitecture-Based Link Estimation) is a method for inferring fiber tracts in the brain by analyzing nuclear/somal anisotropy and spatial cell arrangement. 
+The method leverages high-resolution whole-brain 3D fluorescence imaging data acquired using VISoR2 (Xu et al., Nature Biotechnology 2021, DOI:10.1038/s41587-021-00986-5).\
+\
+This repository provides sample data and code to get started quickly:\
+**1. Download sample data.\
+2. Install MRtrix3 and python code dependencies / install docker image.\
+3. Execute code.**
 # Example raw data 
 * The example data 'CJ4ROI.ims' can be accessed via [http://cable.bigconnectome.org](http://cable.bigconnectome.org).
 # Installation
 
-## Software requirements
+## 1. Software requirements
 This project depends on MRtrix3. Here are the installation methods for Linux and Windows:
 #### Linux
 * You can install MRtrix3 using conda:
@@ -24,7 +29,7 @@ Then, use the command ```sudo apt-get install mrtrix3``` in the Ubuntu subsystem
 * Installation via msys2:\
 Alternatively, you can refer to the official MRtrix3 documentation at https://www.mrtrix.org/download/windows-msys2/ and install it using msys2. In this case, the call to MRtrix3 within **main.py** needs to be executed manually.
 
-## Code dependencies  
+## 2. Code dependencies  
 Code dependencies are in 'requirement.txt'.  
 ```sh
 pip install -r requirements.txt

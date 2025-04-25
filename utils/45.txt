@@ -1,3 +1,4 @@
+# The first three columns are the 45 spherical uniformly distributed directions, and the last column is only used for compatibility with the DWI format.
 0 0 0 0
 -0.92420975646929	-0.05089611462814	0.378478416244222	1000
 0.404878342311335	-0.550026770885152	0.730441016945843	1000

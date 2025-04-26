@@ -41,6 +41,10 @@ We also provide a Docker image that contains all the dependencies for the projec
 ```sh
 docker pull unrealz/cable
 ```
+If CUDA is installed, a GPU-accelerated version can be used:
+```sh
+docker pull unrealz/cable:gpu
+```
 For WSL2-based Docker Desktop users, use the following command to execute and display:
 ```sh
 docker run -it -v /run/desktop/mnt/host/wslg/.X11-unix:/tmp/.X11-unix `

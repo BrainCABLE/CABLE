@@ -168,10 +168,10 @@ def ODFProcessing(dwi_path, cable_params, fod_path,  tck_path, dwi_lpca = True):
     # os.system(f'dwi2response tax {dwi_path} {res_path} -grad {dir_path} -force')
     if dwi_lpca:
         dwi_lpca_path = run_lpca(dwi_path)
-        os.system(f'dwi2fod msmt_csd {dwi_lpca_path} {res_path} {fod_path} -grad {dir_path} -lmax 8 -force')
+        os.system(f'dwi2fod msmt_csd {dwi_lpca_path} {res_path} {fod_path} -grad {dir_path} -lmax 12 -force')
     else:
         os.system(f'mrfilter "{dwi_path}" smooth -stdev 0.04,0.04,0.04 "{dwi_path}" -force')
-        os.system(f'dwi2fod msmt_csd {dwi_path} {res_path} {fod_path} -grad {dir_path} -lmax 8 -shells 1000 -force')
+        os.system(f'dwi2fod msmt_csd {dwi_path} {res_path} {fod_path} -grad {dir_path} -lmax 12 -shells 1000 -force')
     os.system(f'tckgen -seed_dynamic {fod_path} {fod_path} {tck_path} -select {n_tck_sample} -power 2 -cutoff 0.1 -force -minlength 0.01 -maxlength 100000 -force')
 
 def ComputeCABLE(img3d_path, cable_params):

@@ -3,10 +3,10 @@
 import os
 import sys
 import utils.dataLoader as dataLoader
+from utils.lpca import run_lpca
 import numpy as np
 import h5py
 import nibabel as nib
-
 import torch
 import torch.nn.functional as F
 from scipy import ndimage as filter  # Use CPU-based Gaussian filtering
@@ -96,11 +96,11 @@ def GradientWeightedFunction(img3d_path, cable_params, dwi_path):
     # Initialize result array for Gradient Weighted Function (GWF)
     ODF_Data = np.zeros([(nii_roi[1] - nii_roi[0]) // rho,
                          (nii_roi[3] - nii_roi[2]) // rho,
-                         (nii_roi[5] - nii_roi[4]) // rho, 46], dtype=np.float32)
+                         (nii_roi[5] - nii_roi[4]) // rho, 45], dtype=np.float32)
     print(f'Result GWF image size: {ODF_Data.shape}')
     
     # Load the predefined gradient directions (starting from second row)
-    field_dirs = np.loadtxt(dirs)[1:, :-1].astype(np.float32)
+    field_dirs = np.loadtxt(dirs)[:, :-1].astype(np.float32)
     ODF_partition = split([10 * rho, 10 * rho, 10 * rho], nii_roi, rho)
     
     # Create the dataset and dataloader for processing image blocks
@@ -127,9 +127,6 @@ def GradientWeightedFunction(img3d_path, cable_params, dwi_path):
         x = x[..., None].transpose(0, -1)[0][0]
         x = x.numpy()
         np.nan_to_num(x, copy=False)
-        # Add the 0-th component by concatenating the max response multiplied by 2
-        x = np.concatenate([np.max(x, axis=-1)[..., None] * 2, x], axis=-1)
-        x[..., 0] = np.where(x[..., 0] > 0.2, 1, 0)
         # Write the processed block into the result array
         ODF_block = batch[1]
         ODF_Data[(ODF_block[0][0] - nii_roi[0]) // rho:(ODF_block[0][1] - nii_roi[0]) // rho,
@@ -153,15 +150,15 @@ def makeNiiForMRView(fod_resolution, out):
     nii_img.affine[2, -1] = fod_resolution / 2
     return nii_img
 
-def ODFProcessing(dwi_path, cable_params, fod_path, mask_path, tck_path):
+def ODFProcessing(dwi_path, cable_params, fod_path,  tck_path, dwi_lpca = True):
     """
     Perform ODF processing by executing external commands.
     
     @param dwi_path: path to the DWI image
     @param cable_params: parameter dictionary
     @param fod_path: path for the FOD output
-    @param mask_path: path for the mask output
     @param tck_path: path for the tractography output
+    @param dwi_lpca: Whether to conduct LPCA
     """
     n_tck_sample = cable_params['n_tck_sample']
     res_path     = cable_params['response_path']
@@ -169,11 +166,13 @@ def ODFProcessing(dwi_path, cable_params, fod_path, mask_path, tck_path):
 
     # Generate smoothed DWI image, FOD, mask, and tractography using external commands
     # os.system(f'dwi2response tax {dwi_path} {res_path} -grad {dir_path} -force')
-    os.system(f'mrfilter "{dwi_path}" smooth -stdev 0.04,0.04,0.04 "{dwi_path}" -force')
-    os.system(f'dwi2fod msmt_csd "{dwi_path}" "{res_path}" "{fod_path}" -grad "{dir_path}" '
-              f'-lmax 12 -shells 1000 -force')
-    os.system(f'tckgen -seed_dynamic "{fod_path}" "{fod_path}" "{tck_path}" -select {n_tck_sample} '
-              f'-power 2 -cutoff 0.1 -force -minlength 0.01 -maxlength 100000 -force')
+    if dwi_lpca:
+        dwi_lpca_path = run_lpca(dwi_path)
+        os.system(f'dwi2fod msmt_csd {dwi_lpca_path} {res_path} {fod_path} -grad {dir_path} -lmax 8 -force')
+    else:
+        os.system(f'mrfilter "{dwi_path}" smooth -stdev 0.04,0.04,0.04 "{dwi_path}" -force')
+        os.system(f'dwi2fod msmt_csd {dwi_path} {res_path} {fod_path} -grad {dir_path} -lmax 8 -shells 1000 -force')
+    os.system(f'tckgen -seed_dynamic {fod_path} {fod_path} {tck_path} -select {n_tck_sample} -power 2 -cutoff 0.1 -force -minlength 0.01 -maxlength 100000 -force')
 
 def ComputeCABLE(img3d_path, cable_params):
     """
@@ -188,14 +187,13 @@ def ComputeCABLE(img3d_path, cable_params):
     dwi_path  = f'./DWI_sigma_{sigma}_rho_{rho}.nii'
     fod_path  = f'./FOD_sigma_{sigma}_rho_{rho}.nii'
     tck_path  = f'tck.tck'
-    mask_path = f'mask.nii'
+    lpca_flag = cable_params['lpca']
     GradientWeightedFunction(img3d_path, cable_params, dwi_path)
-    ODFProcessing(dwi_path, cable_params, fod_path, mask_path, tck_path)
+    ODFProcessing(dwi_path, cable_params, fod_path, tck_path, dwi_lpca = lpca_flag)
     res_path_set = {
         'dwi_path': dwi_path,
         'fod_path': fod_path,
         'tck_path': tck_path,
-        'mask_path': mask_path,
     }
     return res_path_set
 
@@ -213,12 +211,13 @@ def main():
         'n_tck_sample': 10000,
         'dir_path': './utils/45.txt',
         'response_path': './utils/response.nii',
+        'lpca': False
     }
     res_path_set = ComputeCABLE(img3d_path, cable_params)
     # Visualize the results using an external MR viewer
     dwi_path = res_path_set['dwi_path']
     tck_path = res_path_set['tck_path']
-    os.system(f'mrview "{dwi_path}" -imagevisible false -tractography.opacity 0.35 -tractography.load "{tck_path}"')
+    os.system(f'mrview {dwi_path} -imagevisible false -tractography.opacity 0.35 -tractography.load "{tck_path}" -voxel 0,7,0')
 
 if __name__ == '__main__':
     main()

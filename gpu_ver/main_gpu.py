@@ -82,7 +82,7 @@ def GradientWeightedFunction(img3d_path, cable_params, dwi_path):
     print(f'Image ROI: {nii_roi}')
     ODF_Data = np.zeros([(nii_roi[1]-nii_roi[0]) // rho,
                          (nii_roi[3]-nii_roi[2]) // rho,
-                         (nii_roi[5]-nii_roi[4]) // rho, 46], dtype=np.float32)
+                         (nii_roi[5]-nii_roi[4]) // rho, 45], dtype=np.float32)
     print(f'Result GWF image size: {ODF_Data.shape}')
     # directions of "gradient field". lmax=8 <=> 45 directions
     field_dirs = cp.loadtxt(dirs)[1:,:-1].astype(np.float32)
@@ -125,54 +125,80 @@ def makeNiiForMRView(fod_reslotion, out):
     out.affine[2, -1] = fod_reslotion / 2
     return out
 
-def ODFProcessing(dwi_path, cable_params, fod_path, mask_path, tck_path):
-    n_tck_sample = cable_params['n_tck_sample']
-    res_path     = cable_params['response_path']
-    dir_path     = cable_params['dir_path']
 
-    # os.system(f'dwi2response tax {dwi_path}  {res_path}  -grad {dir_path}  -force')
-    os.system(f'mrfilter "{dwi_path}" smooth -stdev 0.04,0.04,0.04 "{dwi_path}" -force')
-    os.system(f'dwi2fod msmt_csd "{dwi_path}" "{res_path}" "{fod_path}" -grad "{dir_path}" '
-              f'-lmax 12 -shells 1000 -force')
-    os.system(f'dwi2mask "{dwi_path}" "{mask_path}" -grad "{dir_path}" -force')
-    os.system(f'tckgen -seed_image "{mask_path}" "{fod_path}" "{tck_path}" -select {n_tck_sample} '
-              f'-power 2 -cutoff 0.1 -force -minlength 0.01 -maxlength 100000 -force')
+def ODFProcessing(dwi_path, cable_params, fod_path, tck_path, dwi_lpca=True):
+    """
+    Perform ODF processing by executing external commands.
+
+    @param dwi_path: path to the DWI image
+    @param cable_params: parameter dictionary
+    @param fod_path: path for the FOD output
+    @param tck_path: path for the tractography output
+    @param dwi_lpca: Whether to conduct LPCA
+    """
+    n_tck_sample = cable_params['n_tck_sample']
+    res_path = cable_params['response_path']
+    dir_path = cable_params['dir_path']
+
+    # Generate smoothed DWI image, FOD, mask, and tractography using external commands
+    # os.system(f'dwi2response tax {dwi_path} {res_path} -grad {dir_path} -force')
+    if dwi_lpca:
+        dwi_lpca_path = run_lpca(dwi_path)
+        os.system(f'dwi2fod msmt_csd {dwi_lpca_path} {res_path} {fod_path} -grad {dir_path} -lmax 12 -force')
+    else:
+        os.system(f'mrfilter "{dwi_path}" smooth -stdev 0.04,0.04,0.04 "{dwi_path}" -force')
+        os.system(f'dwi2fod msmt_csd {dwi_path} {res_path} {fod_path} -grad {dir_path} -lmax 12 -shells 1000 -force')
+    os.system(
+        f'tckgen -seed_dynamic {fod_path} {fod_path} {tck_path} -select {n_tck_sample} -power 2 -cutoff 0.1 -force -minlength 0.01 -maxlength 100000 -force')
+
 
 def ComputeCABLE(img3d_path, cable_params):
+    """
+    Compute the CABLE pipeline.
+
+    @param img3d_path: path to the input 3D image
+    @param cable_params: parameter dictionary for processing
+    @return: dictionary containing paths for DWI, FOD, tractography, and mask
+    """
     sigma = cable_params['sigma']
-    rho   = cable_params['rho']
-    dwi_path  = f'./DWI_sigma_{sigma}_rho_{rho}.nii'
-    fod_path  = f'./FOD_sigma_{sigma}_rho_{rho}.nii'
-    tck_path  = f'tck.tck'
-    mask_path = f'mask.nii'
+    rho = cable_params['rho']
+    dwi_path = f'./DWI_sigma_{sigma}_rho_{rho}.nii'
+    fod_path = f'./FOD_sigma_{sigma}_rho_{rho}.nii'
+    tck_path = f'tck.tck'
+    lpca_flag = cable_params['lpca']
     GradientWeightedFunction(img3d_path, cable_params, dwi_path)
-    ODFProcessing(dwi_path, cable_params, fod_path, mask_path, tck_path)
+    ODFProcessing(dwi_path, cable_params, fod_path, tck_path, dwi_lpca=lpca_flag)
     res_path_set = {
         'dwi_path': dwi_path,
         'fod_path': fod_path,
         'tck_path': tck_path,
-        'mask_path': mask_path,
     }
     return res_path_set
 
+
 def main():
+    if len(sys.argv) < 2:
+        sys.exit("Please provide the 3D image file path as an argument.")
     img3d_path = sys.argv[1]
     cable_params = {
-        # smooth parameter for gradient
+        # Smoothing parameter for gradient computation
         'sigma': 1,
-        # size of analyze step (also control analyze window and block size)
-        'rho'  : 20,
-        # downsample ratio, i.e. step size for gradient computaion
+        # Step size for analysis (controls analysis window and block size)
+        'rho': 20,
+        # Downsampling ratio, i.e., step size for gradient computation
         'ratio': 2,
         'n_tck_sample': 10000,
-        'dir_path': './utils/45.txt',
-        'response_path': './utils/response.nii',
+        'dir_path': '../utils/45.txt',
+        'response_path': '../utils/response.nii',
+        'lpca': False
     }
     res_path_set = ComputeCABLE(img3d_path, cable_params)
-    # visualize the results
+    # Visualize the results using an external MR viewer
     dwi_path = res_path_set['dwi_path']
     tck_path = res_path_set['tck_path']
-    os.system(f'mrview "{dwi_path}" -imagevisible false -tractography.load "{tck_path}"')
+    os.system(
+        f'mrview {dwi_path} -imagevisible false -tractography.opacity 0.35 -tractography.load "{tck_path}" -voxel 0,7,0')
+
 
 if __name__ == '__main__':
     main()

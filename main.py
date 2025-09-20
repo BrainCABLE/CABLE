@@ -99,7 +99,7 @@ def GradientWeightedFunction(img3d_path, cable_params, dwi_path):
                          (nii_roi[5] - nii_roi[4]) // rho, 45], dtype=np.float32)
     print(f'Result GWF image size: {ODF_Data.shape}')
     
-    # Load the predefined gradient directions (starting from second row)
+    # Load the predefined gradient directions
     field_dirs = np.loadtxt(dirs)[:, :-1].astype(np.float32)
     ODF_partition = split([10 * rho, 10 * rho, 10 * rho], nii_roi, rho)
     
